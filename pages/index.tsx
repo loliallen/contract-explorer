@@ -25,6 +25,7 @@ import { Seo } from "../lib/components/seo";
 import NextLink from "next/link";
 import Head from "next/head";
 import { configureParams } from "../lib/utils/abi";
+import { HowToWork } from "../lib/containers/how-to-work";
 
 const Page = () => {
   const { data: signer } = useSigner();
@@ -99,6 +100,7 @@ const Page = () => {
             </NextLink>{" "}
             with that?
           </Text>
+          <HowToWork />
         </Box>
         <Flex id="settings" alignItems="center" justifyContent="left">
           <Box minW="40vw" maxW="60vw ">
