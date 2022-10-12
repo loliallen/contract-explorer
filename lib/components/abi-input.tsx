@@ -1,10 +1,4 @@
-import React, {
-  useState,
-  useRef,
-  useEffect,
-  ChangeEvent,
-  useMemo,
-} from "react";
+import React, { useState, useRef, ChangeEvent, useMemo } from "react";
 import {
   Box,
   Button,
@@ -23,13 +17,11 @@ import {
   Tabs,
   Textarea,
 } from "@chakra-ui/react";
-import { connectorsForWallets } from "@rainbow-me/rainbowkit";
 
 type Props = {
-  setParams: React.Dispatch<React.SetStateAction<any>>;
   setAbi: React.Dispatch<React.SetStateAction<any>>;
 };
-export const AbiInput = ({ setParams, setAbi }: Props) => {
+export const AbiInput = ({ setAbi }: Props) => {
   const ref = useRef<HTMLInputElement>(null);
 
   const [prefix, setPrefix] = useState("");
@@ -62,27 +54,6 @@ export const AbiInput = ({ setParams, setAbi }: Props) => {
     }
   }, [abiStr]);
 
-  const configureParams = (abi: any[]) => {
-    const data: Record<string, { type: "call" | "send"; params: any[] }> = {};
-
-    for (const fnItem of abi) {
-      if (fnItem.type === "function") {
-        let type: "call" | "send";
-        if (fnItem.stateMutability === "view") {
-          type = "call";
-        } else {
-          type = "send";
-        }
-        data[fnItem.name] = {
-          type,
-          params: [],
-        };
-      }
-    }
-
-    setParams(data);
-  };
-
   const handleInputAbi = (e: ChangeEvent<HTMLTextAreaElement>) => {
     setAbiStr(e.target.value);
   };
@@ -100,7 +71,6 @@ export const AbiInput = ({ setParams, setAbi }: Props) => {
         const object = eval(abiStr);
         if (Array.isArray(object)) {
           setAbi(object);
-          configureParams(object);
         } else {
           // show error
         }
@@ -110,7 +80,6 @@ export const AbiInput = ({ setParams, setAbi }: Props) => {
     } else {
       if (Array.isArray(objectWithPrefix)) {
         setAbi(objectWithPrefix);
-        configureParams(objectWithPrefix);
       } else {
         // show error
       }
@@ -119,7 +88,7 @@ export const AbiInput = ({ setParams, setAbi }: Props) => {
 
   return (
     <>
-      <Tabs>
+      <Tabs mt="1rem">
         <TabList>
           <Tab>ABI JSON</Tab>
           <Tab>ABI Plain text</Tab>

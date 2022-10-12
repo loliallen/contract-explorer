@@ -2,8 +2,11 @@ import {
   Box,
   FormControl,
   FormLabel,
+  Heading,
   Input,
   InputGroup,
+  List,
+  ListItem,
   Menu,
   MenuItem,
   MenuList,
@@ -37,23 +40,33 @@ export const ContractAddressInput = ({
   };
 
   return (
-    <FormControl>
-      <FormLabel>Contract Address</FormLabel>
-      <InputGroup>
-        <Input value={address} onChange={(e) => setAddress(e.target.value)} />
-        {children}
-        <Box position="absolute" left="0" bottom="0">
-          <Menu isOpen={!address}>
-            <MenuList>
-              {memoContracts.map((el, i) => (
-                <MenuItem key={i} onClick={() => handleClickOnMenuItem(el)}>
-                  {el}
-                </MenuItem>
-              ))}
-            </MenuList>
-          </Menu>
+    <>
+      {memoContracts.length > 0 && (
+        <Box id="recent" mb="1rem">
+          <Heading fontSize="xl" color="gray.600" mb=".5rem">
+            Recent
+          </Heading>
+          <List spacing={4}>
+            {memoContracts.reverse().map((el, i) => (
+              <ListItem
+                key={i}
+                onClick={() => handleClickOnMenuItem(el)}
+                color="gray.400"
+                cursor="pointer"
+              >
+                {el}
+              </ListItem>
+            ))}
+          </List>
         </Box>
-      </InputGroup>
-    </FormControl>
+      )}
+      <FormControl>
+        <FormLabel>Contract Address</FormLabel>
+        <InputGroup>
+          <Input value={address} onChange={(e) => setAddress(e.target.value)} />
+          {children}
+        </InputGroup>
+      </FormControl>
+    </>
   );
 };

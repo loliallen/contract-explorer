@@ -10,6 +10,8 @@ import {
   InputGroup,
   InputLeftAddon,
   InputRightAddon,
+  Link,
+  Text,
 } from "@chakra-ui/react";
 import { AiOutlineSave as SaveIcon } from "react-icons/ai";
 import { useSigner } from "wagmi";
@@ -19,6 +21,10 @@ import { AbiInput } from "../lib/components/abi-input";
 import { Connect } from "../lib/components/connect";
 import { SaveModal } from "../lib/components/save-modal";
 import { ContractAddressInput } from "../lib/components/contract-address-input";
+import { Seo } from "../lib/components/seo";
+import NextLink from "next/link";
+import Head from "next/head";
+import { configureParams } from "../lib/utils/abi";
 
 const Page = () => {
   const { data: signer } = useSigner();
@@ -35,12 +41,6 @@ const Page = () => {
   const [address, setAddress] = useState("");
   const [contract, setContract] = useState<Contract | null>();
 
-  useEffect(() => {
-    if (ethers.utils.isAddress(address) && abi && signer) {
-      setContract(new Contract(address, abi, signer));
-    }
-  }, [address, abi, signer]);
-
   const toggleModal = () => setIsOpen((p) => !p);
 
   const execContractFunction = async (fnName: string) => {
@@ -52,6 +52,7 @@ const Page = () => {
       else res = await contract[fnName](...params[fnName].params).wait();
       setResults((p) => ({ ...p, [fnName]: { value: res, type: "success" } }));
     } catch (e) {
+      console.log(e);
       setResults((p) => ({ ...p, [fnName]: { value: e, type: "error" } }));
     }
   };
@@ -73,27 +74,57 @@ const Page = () => {
       }));
     };
 
+  useEffect(() => {
+    if (ethers.utils.isAddress(address) && abi && signer) {
+      setContract(new Contract(address, abi, signer));
+    }
+  }, [address, abi, signer]);
+
+  useEffect(() => {
+    if (Array.isArray(abi)) {
+      setParams(configureParams(abi));
+    }
+  }, [abi]);
+
   return (
-    <Box>
+    <>
+      <Seo />
       <Connect />
-      <Flex gap="4rem" p="2rem">
-        <Box flex="1">
-          <ContractAddressInput
-            setAbi={setAbi}
-            setAddress={setAddress}
-            address={address}
-          >
-            <InputRightAddon>
-              <Button variant="ghost" onClick={toggleModal}>
-                <SaveIcon />
-              </Button>
-            </InputRightAddon>
-          </ContractAddressInput>
-          <Box mt="2rem" hidden={!contract}>
+      <Box mx="2rem">
+        <Box id="descriptions" m="2rem 0">
+          <Heading as="h1">Contracts explorer</Heading>
+          <Text>
+            <NextLink href={"/about"}>
+              <Link>How to work</Link>
+            </NextLink>{" "}
+            with that?
+          </Text>
+        </Box>
+        <Flex id="settings" alignItems="center" justifyContent="left">
+          <Box minW="40vw" maxW="60vw ">
+            <ContractAddressInput
+              setAbi={setAbi}
+              setAddress={setAddress}
+              address={address}
+            >
+              <InputRightAddon>
+                <Button variant="ghost" onClick={toggleModal}>
+                  <SaveIcon />
+                </Button>
+              </InputRightAddon>
+            </ContractAddressInput>
+            <AbiInput setAbi={setAbi} />
+          </Box>
+        </Flex>
+        <Box mt="2rem">
+          <Box hidden={!contract}>
+            <Heading fontSize="3xl" mb="1rem">
+              Functions
+            </Heading>
             {abi
               .filter((a) => a.type === "function")
               .map((a, i) => (
-                <Box key={i} p=".5rem 0">
+                <Box key={i} p="1rem 0" borderBottom="1px solid lightGray">
                   <Heading fontSize="xl">{a.name}</Heading>
                   <Flex pl=".5rem" align="center" gap="2rem">
                     <Box flex="1">
@@ -156,16 +187,13 @@ const Page = () => {
               ))}
           </Box>
         </Box>
-        <Box flex="1">
-          <AbiInput setParams={setParams} setAbi={setAbi} />
-        </Box>
-      </Flex>
-      <SaveModal
-        isOpen={isOpen}
-        onClose={toggleModal}
-        data={{ address, abi }}
-      />
-    </Box>
+        <SaveModal
+          isOpen={isOpen}
+          onClose={toggleModal}
+          data={{ address, abi }}
+        />
+      </Box>
+    </>
   );
 };
 
