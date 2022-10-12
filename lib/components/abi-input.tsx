@@ -1,4 +1,10 @@
-import React, { useState, useRef, useEffect, ChangeEvent } from "react";
+import React, {
+  useState,
+  useRef,
+  useEffect,
+  ChangeEvent,
+  useMemo,
+} from "react";
 import {
   Box,
   Button,
@@ -10,8 +16,14 @@ import {
   Menu,
   MenuItem,
   MenuList,
+  Tab,
+  TabList,
+  TabPanel,
+  TabPanels,
+  Tabs,
   Textarea,
 } from "@chakra-ui/react";
+import { connectorsForWallets } from "@rainbow-me/rainbowkit";
 
 type Props = {
   setParams: React.Dispatch<React.SetStateAction<any>>;
@@ -34,6 +46,22 @@ export const AbiInput = ({ setParams, setAbi }: Props) => {
       fr.readAsText(file);
     });
 
+  const objectWithPrefix = useMemo(() => {
+    if (!prefix) return jsonObject;
+    return jsonObject[prefix];
+  }, [prefix, jsonObject]);
+
+  const isValidAbiStr = useMemo(() => {
+    if (!abiStr) return false;
+    try {
+      const object = eval(abiStr);
+      console.log(Array.isArray(object));
+      return Array.isArray(object);
+    } catch {
+      return false;
+    }
+  }, [abiStr]);
+
   const configureParams = (abi: any[]) => {
     const data: Record<string, { type: "call" | "send"; params: any[] }> = {};
 
@@ -55,6 +83,10 @@ export const AbiInput = ({ setParams, setAbi }: Props) => {
     setParams(data);
   };
 
+  const handleInputAbi = (e: ChangeEvent<HTMLTextAreaElement>) => {
+    setAbiStr(e.target.value);
+  };
+
   const handleUploadAbi = async (e: ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files) return;
 
@@ -62,59 +94,108 @@ export const AbiInput = ({ setParams, setAbi }: Props) => {
     setJsonObject(abiObj);
   };
 
-  useEffect(() => {
-    if (jsonObject && prefix && Object.keys(jsonObject).includes(prefix)) {
-      let res = jsonObject[prefix];
-
-      setAbi(res);
-      configureParams(res);
+  const hanldeUse = (mode: "json" | "text") => {
+    if (mode === "text") {
+      try {
+        const object = eval(abiStr);
+        if (Array.isArray(object)) {
+          setAbi(object);
+          configureParams(object);
+        } else {
+          // show error
+        }
+      } catch (e) {
+        // eval error
+      }
+    } else {
+      if (Array.isArray(objectWithPrefix)) {
+        setAbi(objectWithPrefix);
+        configureParams(objectWithPrefix);
+      } else {
+        // show error
+      }
     }
-  }, [jsonObject, prefix]);
+  };
 
   return (
     <>
-      <FormControl mb="1rem">
-        <FormLabel>ABI json</FormLabel>
-        <InputGroup>
-          <InputLeftAddon>prefix:</InputLeftAddon>
-          <Input value={prefix} onChange={(e) => setPrefix(e.target.value)} />
-        </InputGroup>
-        <Box position="relative">
-          <Menu
-            isOpen={
-              prefix.length > 0 && !Object.keys(jsonObject).includes(prefix)
-            }
-          >
-            <MenuList>
-              {Object.keys(jsonObject)
-                .filter((k) => Array.isArray(jsonObject[k]))
-                .map((k, i) => (
-                  <MenuItem onClick={() => setPrefix(k)} key={i}>
-                    {k}
-                  </MenuItem>
-                ))}
-            </MenuList>
-          </Menu>
-        </Box>
-        <Button
-          mt=".5rem"
-          width="full"
-          onClick={() => ref.current && ref.current.click()}
-        >
-          Upload
-        </Button>
-        <input
-          hidden
-          ref={ref}
-          type="file"
-          accept=".json"
-          onChange={handleUploadAbi}
-        />
-      </FormControl>
-      <FormControl>
-        <FormLabel>ABI</FormLabel>
-        <Textarea value={abiStr} onChange={(e) => setAbiStr(e.target.value)} />
-      </FormControl>
+      <Tabs>
+        <TabList>
+          <Tab>ABI JSON</Tab>
+          <Tab>ABI Plain text</Tab>
+        </TabList>
+        <TabPanels>
+          <TabPanel>
+            <FormControl mb="1rem">
+              <FormLabel>ABI json</FormLabel>
+              <InputGroup>
+                <InputLeftAddon>prefix:</InputLeftAddon>
+                <Input
+                  value={prefix}
+                  onChange={(e) => setPrefix(e.target.value)}
+                />
+              </InputGroup>
+              <Box position="relative">
+                <Menu
+                  isOpen={
+                    prefix.length > 0 &&
+                    !Object.keys(jsonObject).includes(prefix)
+                  }
+                >
+                  <MenuList>
+                    {Object.keys(jsonObject)
+                      .filter((k) => Array.isArray(jsonObject[k]))
+                      .map((k, i) => (
+                        <MenuItem onClick={() => setPrefix(k)} key={i}>
+                          {k}
+                        </MenuItem>
+                      ))}
+                  </MenuList>
+                </Menu>
+              </Box>
+              <Button
+                mt=".5rem"
+                width="full"
+                onClick={() => ref.current && ref.current.click()}
+              >
+                Upload
+              </Button>
+              <Button
+                mt=".5rem"
+                width="full"
+                onClick={() => hanldeUse("json")}
+                colorScheme="blackAlpha"
+                disabled={!Array.isArray(objectWithPrefix)}
+              >
+                Use
+              </Button>
+            </FormControl>
+          </TabPanel>
+          <TabPanel>
+            <FormControl>
+              <FormLabel>ABI</FormLabel>
+              <Textarea value={abiStr} onChange={handleInputAbi} />
+              <Button
+                mt=".5rem"
+                width="full"
+                onClick={() => hanldeUse("text")}
+                colorScheme="blackAlpha"
+                disabled={!isValidAbiStr}
+              >
+                Use
+              </Button>
+            </FormControl>
+          </TabPanel>
+        </TabPanels>
+      </Tabs>
+
+      <input
+        hidden
+        ref={ref}
+        type="file"
+        accept=".json"
+        onChange={handleUploadAbi}
+      />
     </>
   );
 };

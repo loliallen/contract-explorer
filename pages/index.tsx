@@ -9,16 +9,21 @@ import {
   Input,
   InputGroup,
   InputLeftAddon,
-  Textarea,
+  InputRightAddon,
 } from "@chakra-ui/react";
+import { AiOutlineSave as SaveIcon } from "react-icons/ai";
 import { useSigner } from "wagmi";
 import { Contract, ethers } from "ethers";
 import { useState, useEffect } from "react";
 import { AbiInput } from "../lib/components/abi-input";
 import { Connect } from "../lib/components/connect";
+import { SaveModal } from "../lib/components/save-modal";
+import { ContractAddressInput } from "../lib/components/contract-address-input";
 
 const Page = () => {
   const { data: signer } = useSigner();
+
+  const [isOpen, setIsOpen] = useState(false);
 
   const [abi, setAbi] = useState<any[]>([]);
   const [params, setParams] = useState<
@@ -35,6 +40,8 @@ const Page = () => {
       setContract(new Contract(address, abi, signer));
     }
   }, [address, abi, signer]);
+
+  const toggleModal = () => setIsOpen((p) => !p);
 
   const execContractFunction = async (fnName: string) => {
     try {
@@ -71,13 +78,17 @@ const Page = () => {
       <Connect />
       <Flex gap="4rem" p="2rem">
         <Box flex="1">
-          <FormControl>
-            <FormLabel>Contract Address</FormLabel>
-            <Input
-              value={address}
-              onChange={(e) => setAddress(e.target.value)}
-            />
-          </FormControl>
+          <ContractAddressInput
+            setAbi={setAbi}
+            setAddress={setAddress}
+            address={address}
+          >
+            <InputRightAddon>
+              <Button variant="ghost" onClick={toggleModal}>
+                <SaveIcon />
+              </Button>
+            </InputRightAddon>
+          </ContractAddressInput>
           <Box mt="2rem" hidden={!contract}>
             {abi
               .filter((a) => a.type === "function")
@@ -149,6 +160,11 @@ const Page = () => {
           <AbiInput setParams={setParams} setAbi={setAbi} />
         </Box>
       </Flex>
+      <SaveModal
+        isOpen={isOpen}
+        onClose={toggleModal}
+        data={{ address, abi }}
+      />
     </Box>
   );
 };
