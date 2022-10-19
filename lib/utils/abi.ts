@@ -18,3 +18,16 @@ export const configureParams = (abi: any[]) => {
 
   return data;
 };
+
+export const configureArgs = (abi: any[]) => {
+  const data: Record<string, { from: string; value?: string }> = {};
+
+  for (const fnItem of abi) {
+    data[fnItem.name] = { from: "" };
+    if (fnItem.stateMutability === "payable") {
+      data[fnItem.name].value = "";
+    }
+  }
+
+  return data;
+};

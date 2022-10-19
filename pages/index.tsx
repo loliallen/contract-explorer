@@ -1,4 +1,8 @@
 import {
+  Accordion,
+  AccordionButton,
+  AccordionItem,
+  AccordionPanel,
   Box,
   Button,
   Code,
@@ -24,7 +28,7 @@ import { ContractAddressInput } from "../lib/components/contract-address-input";
 import { Seo } from "../lib/components/seo";
 import NextLink from "next/link";
 import Head from "next/head";
-import { configureParams } from "../lib/utils/abi";
+import { configureArgs, configureParams } from "../lib/utils/abi";
 import { HowToWork } from "../lib/containers/how-to-work";
 
 const Page = () => {
@@ -35,6 +39,9 @@ const Page = () => {
   const [abi, setAbi] = useState<any[]>([]);
   const [params, setParams] = useState<
     Record<string, { type: "call" | "send"; params: any[] }>
+  >({});
+  const [args, setArgs] = useState<
+    Record<string, { from: string; value?: any }>
   >({});
   const [results, setResults] = useState<
     Record<string, { type: "success" | "error"; value: any }>
@@ -49,8 +56,8 @@ const Page = () => {
       if (!contract) return;
       let res: any;
       if (params[fnName].type === "call")
-        res = await contract[fnName](...params[fnName].params);
-      else res = await contract[fnName](...params[fnName].params).wait();
+        res = await contract[fnName](...params[fnName].params, args[fnName]);
+      else res = await contract[fnName](...params[fnName].params, args[fnName]);
       setResults((p) => ({ ...p, [fnName]: { value: res, type: "success" } }));
     } catch (e) {
       console.log(e);
@@ -75,6 +82,15 @@ const Page = () => {
       }));
     };
 
+  const handleChangeFunctionArgs =
+    (name: string, field: "from" | "value") =>
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setArgs((p) => ({
+        ...p,
+        [name]: { ...p[name], [field]: e.target.value },
+      }));
+    };
+
   useEffect(() => {
     if (ethers.utils.isAddress(address) && abi && signer) {
       setContract(new Contract(address, abi, signer));
@@ -84,8 +100,13 @@ const Page = () => {
   useEffect(() => {
     if (Array.isArray(abi)) {
       setParams(configureParams(abi));
+      setArgs(configureArgs(abi));
     }
   }, [abi]);
+
+  useEffect(() => {
+    console.log(params);
+  }, [params]);
 
   return (
     <>
@@ -185,6 +206,38 @@ const Page = () => {
                       </Button>
                     </Box>
                   </Flex>
+                  <Box pl=".5rem" mt="1rem">
+                    <Accordion allowToggle>
+                      <AccordionItem>
+                        <AccordionButton>
+                          <Heading fontSize="md">Args</Heading>
+                        </AccordionButton>
+                        <AccordionPanel>
+                          <InputGroup>
+                            <InputLeftAddon>From</InputLeftAddon>
+                            <Input
+                              defaultValue={address}
+                              onChange={handleChangeFunctionArgs(
+                                a.name,
+                                "from"
+                              )}
+                            />
+                          </InputGroup>
+                          {args[a.name]?.value !== undefined && (
+                            <InputGroup mt=".5rem">
+                              <InputLeftAddon>Value</InputLeftAddon>
+                              <Input
+                                onChange={handleChangeFunctionArgs(
+                                  a.name,
+                                  "value"
+                                )}
+                              />
+                            </InputGroup>
+                          )}
+                        </AccordionPanel>
+                      </AccordionItem>
+                    </Accordion>
+                  </Box>
                 </Box>
               ))}
           </Box>
