@@ -1,3 +1,5 @@
+import crypto from "crypto-js";
+
 export const configureParams = (abi: any[]) => {
   const data: Record<string, { type: "call" | "send"; params: any[] }> = {};
 
@@ -9,7 +11,7 @@ export const configureParams = (abi: any[]) => {
       } else {
         type = "send";
       }
-      data[fnItem.name] = {
+      data[fnItem.hash] = {
         type,
         params: [],
       };
@@ -23,11 +25,19 @@ export const configureArgs = (abi: any[]) => {
   const data: Record<string, { from: string; value?: string }> = {};
 
   for (const fnItem of abi) {
-    data[fnItem.name] = { from: "" };
+    data[fnItem.hash] = { from: "" };
     if (fnItem.stateMutability === "payable") {
-      data[fnItem.name].value = "";
+      data[fnItem.hash].value = "";
     }
   }
 
   return data;
+};
+
+export const configureAbi = (abi: any[]) => {
+  for (let abiItem of abi) {
+    const hash = crypto.MD5(JSON.stringify(abiItem)).toString();
+    abiItem["hash"] = hash;
+  }
+  return abi;
 };

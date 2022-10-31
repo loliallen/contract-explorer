@@ -17,6 +17,7 @@ import {
   Tabs,
   Textarea,
 } from "@chakra-ui/react";
+import { configureAbi } from "../utils/abi";
 
 type Props = {
   setAbi: React.Dispatch<React.SetStateAction<any>>;
@@ -70,7 +71,7 @@ export const AbiInput = ({ setAbi }: Props) => {
       try {
         const object = eval(abiStr);
         if (Array.isArray(object)) {
-          setAbi(object);
+          setAbi(configureAbi(object));
         } else {
           // show error
         }
@@ -79,7 +80,7 @@ export const AbiInput = ({ setAbi }: Props) => {
       }
     } else {
       if (Array.isArray(objectWithPrefix)) {
-        setAbi(objectWithPrefix);
+        setAbi(configureAbi(objectWithPrefix));
       } else {
         // show error
       }

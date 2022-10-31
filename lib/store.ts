@@ -11,11 +11,11 @@ export const getMemorizedData = () => {
 };
 
 const updateMetadata = (value: string) => {
-  const meta: string[] = JSON.parse(
-    localStorage.getItem(METADATA_FILED) || JSON.stringify([])
+  const meta: Set<string> = new Set(
+    JSON.parse(localStorage.getItem(METADATA_FILED) || JSON.stringify([]))
   );
-  meta.push(value);
-  localStorage.setItem(METADATA_FILED, JSON.stringify(meta));
+  meta.add(value);
+  localStorage.setItem(METADATA_FILED, JSON.stringify(Array.from(meta)));
 };
 
 export const getObject = (name: string) => {

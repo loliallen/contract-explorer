@@ -18,8 +18,8 @@ import {
   Text,
 } from "@chakra-ui/react";
 import { AiOutlineSave as SaveIcon } from "react-icons/ai";
-import { useSigner } from "wagmi";
-import { Contract, ethers } from "ethers";
+import { useAccount, useSigner } from "wagmi";
+import { Contract, ContractFunction, ethers } from "ethers";
 import { useState, useEffect } from "react";
 import { AbiInput } from "../lib/components/abi-input";
 import { Connect } from "../lib/components/connect";
@@ -27,12 +27,12 @@ import { SaveModal } from "../lib/components/save-modal";
 import { ContractAddressInput } from "../lib/components/contract-address-input";
 import { Seo } from "../lib/components/seo";
 import NextLink from "next/link";
-import Head from "next/head";
 import { configureArgs, configureParams } from "../lib/utils/abi";
 import { HowToWork } from "../lib/containers/how-to-work";
 
 const Page = () => {
   const { data: signer } = useSigner();
+  const { address: accountAddress } = useAccount();
 
   const [isOpen, setIsOpen] = useState(false);
 
@@ -51,17 +51,16 @@ const Page = () => {
 
   const toggleModal = () => setIsOpen((p) => !p);
 
-  const execContractFunction = async (fnName: string) => {
+  const execContractFunction = async (hash: string, name: string) => {
     try {
       if (!contract) return;
-      let res: any;
-      if (params[fnName].type === "call")
-        res = await contract[fnName](...params[fnName].params, args[fnName]);
-      else res = await contract[fnName](...params[fnName].params, args[fnName]);
-      setResults((p) => ({ ...p, [fnName]: { value: res, type: "success" } }));
+      const data = [...params[hash].params, args[hash]];
+      console.log("data", data, contract, name);
+      const res = await contract[name](...params[hash].params, args[hash]);
+      setResults((p) => ({ ...p, [hash]: { value: res, type: "success" } }));
     } catch (e) {
       console.log(e);
-      setResults((p) => ({ ...p, [fnName]: { value: e, type: "error" } }));
+      setResults((p) => ({ ...p, [hash]: { value: e, type: "error" } }));
     }
   };
 
@@ -103,10 +102,6 @@ const Page = () => {
       setArgs(configureArgs(abi));
     }
   }, [abi]);
-
-  useEffect(() => {
-    console.log(params);
-  }, [params]);
 
   return (
     <>
@@ -164,7 +159,7 @@ const Page = () => {
                                 </InputLeftAddon>
                                 <Input
                                   onChange={handleChangeFunctionParam(
-                                    a.name,
+                                    a.hash,
                                     Number(j),
                                     a.inputs.length
                                   )}
@@ -173,11 +168,11 @@ const Page = () => {
                             </Box>
                           )
                         )}
-                      {results[a.name] && (
+                      {results[a.hash] && (
                         <Box
                           mt="1rem"
                           color={
-                            results[a.name].type === "error"
+                            results[a.hash].type === "error"
                               ? "red.600"
                               : "blue.300"
                           }
@@ -186,22 +181,18 @@ const Page = () => {
                         >
                           <Heading fontSize="md">
                             Output{" "}
-                            {results[a.name].type === "error" && "(ERROR)"}
+                            {results[a.hash].type === "error" && "(ERROR)"}
                           </Heading>
                           <Code p=".5rem" overflow="auto">
-                            <pre>
-                              {JSON.stringify(
-                                results[a.name].value,
-                                ["reason", "code", "transaction", "data"],
-                                4
-                              )}
-                            </pre>
+                            <pre>{JSON.stringify(results[a.hash].value)}</pre>
                           </Code>
                         </Box>
                       )}
                     </Box>
                     <Box width="5rem" justifyContent="right" display="flex">
-                      <Button onClick={() => execContractFunction(a.name)}>
+                      <Button
+                        onClick={() => execContractFunction(a.hash, a.name)}
+                      >
                         Exec
                       </Button>
                     </Box>
@@ -216,19 +207,19 @@ const Page = () => {
                           <InputGroup>
                             <InputLeftAddon>From</InputLeftAddon>
                             <Input
-                              defaultValue={address}
+                              defaultValue={accountAddress}
                               onChange={handleChangeFunctionArgs(
-                                a.name,
+                                a.hash,
                                 "from"
                               )}
                             />
                           </InputGroup>
-                          {args[a.name]?.value !== undefined && (
+                          {args[a.hash]?.value !== undefined && (
                             <InputGroup mt=".5rem">
                               <InputLeftAddon>Value</InputLeftAddon>
                               <Input
                                 onChange={handleChangeFunctionArgs(
-                                  a.name,
+                                  a.hash,
                                   "value"
                                 )}
                               />
