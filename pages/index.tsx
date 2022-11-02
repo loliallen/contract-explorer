@@ -184,7 +184,9 @@ const Page = () => {
                             {results[a.hash].type === "error" && "(ERROR)"}
                           </Heading>
                           <Code p=".5rem" overflow="auto">
-                            <pre>{JSON.stringify(results[a.hash].value)}</pre>
+                            <pre>
+                              {JSON.stringify(results[a.hash].value, null, 2)}
+                            </pre>
                           </Code>
                         </Box>
                       )}

@@ -12,6 +12,7 @@ import {
   MenuList,
 } from "@chakra-ui/react";
 import { ReactNode, useState, useEffect } from "react";
+import { useNetwork } from "wagmi";
 import { getMemorizedData, getObject } from "../store";
 
 type Props = {
@@ -27,7 +28,7 @@ export const ContractAddressInput = ({
   children,
 }: Props) => {
   const [memoContracts, setMemoContracts] = useState<string[]>([]);
-
+  const { chain } = useNetwork();
   useEffect(() => {
     const contracts = getMemorizedData();
     setMemoContracts(contracts);
@@ -61,7 +62,10 @@ export const ContractAddressInput = ({
         </Box>
       )}
       <FormControl>
-        <FormLabel>Contract Address</FormLabel>
+        <FormLabel fontWeight="bold">
+          Contract Address{" "}
+          {chain?.name ? `(on ${chain.name})` : "(Missing Network)"}
+        </FormLabel>
         <InputGroup>
           <Input value={address} onChange={(e) => setAddress(e.target.value)} />
           {children}
