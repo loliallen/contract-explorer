@@ -64,7 +64,7 @@ export const ContractAddressInput = ({
       <FormControl>
         <FormLabel fontWeight="bold">
           Contract Address{" "}
-          {chain?.name ? `(on ${chain.name})` : "Missing Network"}
+          {chain?.name ? `(on ${chain.name})` : "(Missing Network)"}
         </FormLabel>
         <InputGroup>
           <Input value={address} onChange={(e) => setAddress(e.target.value)} />
