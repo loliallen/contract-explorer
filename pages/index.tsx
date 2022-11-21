@@ -7,8 +7,6 @@ import {
   Button,
   Code,
   Flex,
-  FormControl,
-  FormLabel,
   Heading,
   Input,
   InputGroup,
@@ -65,11 +63,10 @@ const Page = () => {
   };
 
   const handleChangeFunctionParam =
-    (name: string, index: number, len: number) =>
-    (e: React.ChangeEvent<HTMLInputElement>) => {
+    (name: string, index: number, len: number) => (value: any) => {
       const data: any[] = [];
       for (let i = 0; i < len; i++) {
-        if (i === index) data.push(e.target.value);
+        if (i === index) data.push(value);
         else {
           const prev_value = params[name].params[i];
           data.push(prev_value || undefined);
@@ -158,11 +155,17 @@ const Page = () => {
                                   {input.name} : {input.type}
                                 </InputLeftAddon>
                                 <Input
-                                  onChange={handleChangeFunctionParam(
-                                    a.hash,
-                                    Number(j),
-                                    a.inputs.length
-                                  )}
+                                  onChange={(e: { target: { value: any } }) =>
+                                    handleChangeFunctionParam(
+                                      a.hash,
+                                      Number(j),
+                                      a.inputs.length
+                                    )(
+                                      input.type.includes("[]")
+                                        ? e.target.value.split(",")
+                                        : e.target.value
+                                    )
+                                  }
                                 />
                               </InputGroup>
                             </Box>
