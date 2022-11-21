@@ -64,6 +64,7 @@ const Page = () => {
 
   const handleChangeFunctionParam =
     (name: string, index: number, len: number) => (value: any) => {
+      console.log(value);
       const data: any[] = [];
       for (let i = 0; i < len; i++) {
         if (i === index) data.push(value);
@@ -155,7 +156,7 @@ const Page = () => {
                                   {input.name} : {input.type}
                                 </InputLeftAddon>
                                 <Input
-                                  onChange={(e: { target: { value: any } }) =>
+                                  onChange={(e) =>
                                     handleChangeFunctionParam(
                                       a.hash,
                                       Number(j),
